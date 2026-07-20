@@ -41,7 +41,7 @@ class LoanServiceTest {
     @Test
     void createLoan_successfulLoanCreation() {
         // Arrange
-        when(loanRepository.existsByEquipmentCodeAndStatus("LAPTOP-VASCONEZCHRISTIAN", EquipmentLoanStatus.APPROVED)).thenReturn(false);
+        when(loanRepository.existsByEquipmentCodeAndStatus("LAPTOP-VASCONEZ", EquipmentLoanStatus.APPROVED)).thenReturn(false);
         when(equipmentPolicyClient.isBorrowerBlocked("cgvasconez2@espe.edu.ec")).thenReturn(false);
         when(loanRepository.save(any(EquipmentLoan.class))).thenAnswer(invocation -> {
             EquipmentLoan loan = invocation.getArgument(0);
@@ -50,14 +50,14 @@ class LoanServiceTest {
         });
 
         // Act
-        LoanResponse response = loanService.createLoan("LAPTOP-VASCONEZCHRISTIAN", "cgvasconez2@espe.edu.ec", 5);
+        LoanResponse response = loanService.createLoan("LAPTOP-VASCONEZ", "cgvasconez2@espe.edu.ec", 5);
 
         // Assert
         assertEquals(100L, response.getLoanId());
         assertEquals("APPROVED-LAPTOP-VASCONEZ-5", response.getApprovalCode());
         verify(loanRepository).save(loanCaptor.capture());
         EquipmentLoan savedLoan = loanCaptor.getValue();
-        assertEquals("LAPTOP-VASCONEZCHRISTIAN", savedLoan.getEquipmentCode());
+        assertEquals("LAPTOP-VASCONEZ", savedLoan.getEquipmentCode());
         assertEquals("cgvasconez2@espe.edu.ec", savedLoan.getBorrowerEmail());
         assertEquals(5, savedLoan.getLoanDays());
         assertEquals(EquipmentLoanStatus.APPROVED, savedLoan.getStatus());
@@ -70,7 +70,7 @@ class LoanServiceTest {
         // Act
         InvalidBorrowerEmailException exception = assertThrows(
                 InvalidBorrowerEmailException.class,
-            () -> loanService.createLoan("LAPTOP-VASCONEZCHRISTIAN", "correo-invalido", 5)
+            () -> loanService.createLoan("LAPTOP-VASCONEZ", "correo-invalido", 5)
         );
 
         // Assert
@@ -85,7 +85,7 @@ class LoanServiceTest {
         // Act
         InvalidLoanDaysException exception = assertThrows(
                 InvalidLoanDaysException.class,
-            () -> loanService.createLoan("LAPTOP-VASCONEZCHRISTIAN", "cgvasconez2@espe.edu.ec", 20)
+            () -> loanService.createLoan("LAPTOP-VASCONEZ", "cgvasconez2@espe.edu.ec", 20)
         );
 
         // Assert
@@ -96,17 +96,17 @@ class LoanServiceTest {
     @Test
     void createLoan_equipmentAlreadyLoaned_verifiesRepositoryAndNeverPolicyClient() {
         // Arrange
-        when(loanRepository.existsByEquipmentCodeAndStatus("LAPTOP-VASCONEZCHRISTIAN", EquipmentLoanStatus.APPROVED)).thenReturn(true);
+        when(loanRepository.existsByEquipmentCodeAndStatus("LAPTOP-VASCONEZ", EquipmentLoanStatus.APPROVED)).thenReturn(true);
 
         // Act
         EquipmentAlreadyLoanedException exception = assertThrows(
                 EquipmentAlreadyLoanedException.class,
-                () -> loanService.createLoan("LAPTOP-VASCONEZCHRISTIAN", "cgvasconez2@espe.edu.ec", 5)
+                () -> loanService.createLoan("LAPTOP-VASCONEZ", "cgvasconez2@espe.edu.ec", 5)
         );
 
         // Assert
         assertEquals("El equipo ya se encuentra prestado", exception.getMessage());
-        verify(loanRepository).existsByEquipmentCodeAndStatus("LAPTOP-VASCONEZCHRISTIAN", EquipmentLoanStatus.APPROVED);
+        verify(loanRepository).existsByEquipmentCodeAndStatus("LAPTOP-VASCONEZ", EquipmentLoanStatus.APPROVED);
         verify(equipmentPolicyClient, never()).isBorrowerBlocked(any());
         verify(loanRepository, never()).save(any());
     }
